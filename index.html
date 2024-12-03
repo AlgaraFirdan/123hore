@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Ecommerce</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.8.1/js/all.js"></script>
+    <style>
+        #cartBadge {
+            font-size: 0.8rem;
+            padding: 0.4em 0.6em;
+            border-radius: 50%;
+            color: white;
+            background-color: red;
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+        .card {
+            min-height: 400px; /* Menjamin setiap card memiliki tinggi yang sama */
+        }
+        .card img {
+            object-fit: cover; /* Gambar tidak terdistorsi */
+            height: 200px; /* Sesuaikan tinggi gambar */
+        }
+        .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-body .btn {
+            margin-top: auto; /* Tombol tetap di bagian bawah */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-3">
+        <nav class="navbar navbar-light bg-light">
+            <a class="navbar-brand">Mini Ecommerce</a>
+            <form class="form-inline" id="formItem">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" id="keyword" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="searchItem">Search</button>
+            </form>
+            <button class="btn btn-primary position-relative" id="cartButton" data-toggle="modal" data-target="#cartModal">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="cartBadge" class="badge badge-light">0</span>
+            </button>
+        </nav>
+
+        <div class="row" id="listBarang"></div>
+    </div>
+
+    <!-- Modal untuk Keranjang -->
+    <div class="modal fade" id="cartModal" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cartModalLabel">Keranjang Belanja</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group" id="cartList"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script>
+        const items = [
+            ['001', 'Keyboard Logitek', 60000, 'Keyboard yang mantap untuk kantoran', 'Keyboard Logitech.png'],
+            ['002', 'Keyboard MSI', 300000, 'Keyboard gaming MSI mekanik', 'MSI.png'],
+            ['003', 'Mouse Genius', 50000, 'Mouse Genius biar lebih pinter', 'Genius.png'],
+            ['004', 'Mouse Jerry', 30000, 'Mouse yang disukai kucing', 'Jerry.png']
+        ];
+
+        let cart = []; // Array untuk menyimpan item di keranjang
+
+        // Render produk ke halaman
+        function renderItems(keyword = "") {
+            const listBarang = document.getElementById("listBarang");
+            listBarang.innerHTML = ""; // Kosongkan daftar sebelum render
+
+            items.filter(item => item[1].toLowerCase().includes(keyword.toLowerCase()))
+                .forEach(item => {
+                    const itemHTML = `
+                    <div class="col-md-4 col-sm-6 mt-3">
+                        <div class="card h-100">
+                            <img src="${item[4]}" class="card-img-top" alt="${item[1]}" style="height: 200px; object-fit: cover;">
+                            <div class="card-body">
+                                <h5 class="card-title">${item[1]}</h5>
+                                <p class="card-text">${item[3]}</p>
+                                <p class="card-text"><strong>Rp ${item[2].toLocaleString()}</strong></p>
+                                <button class="btn btn-primary mt-auto" onclick="addToCart('${item[0]}')">Add To Cart</button>
+                            </div>
+                        </div>
+                    </div>`;
+                    listBarang.innerHTML += itemHTML;
+                });
+        }
+
+        // Tambahkan produk ke keranjang
+        function addToCart(itemId) {
+            const item = items.find(i => i[0] === itemId);
+            if (item) {
+                cart.push(item);
+                updateCartCount(); // Perbarui jumlah item di ikon keranjang
+            }
+        }
+
+        // Perbarui jumlah item di ikon keranjang
+        function updateCartCount() {
+            const cartCount = cart.length; // Hitung jumlah item di keranjang
+            const cartBadge = document.getElementById("cartBadge");
+
+            cartBadge.textContent = cartCount; // Perbarui teks badge
+
+            // Sembunyikan badge jika kosong
+            if (cartCount === 0) {
+                cartBadge.style.display = "none";
+            } else {
+                cartBadge.style.display = "inline";
+            }
+        }
+
+        // Render isi keranjang di modal
+        function renderCart() {
+            const cartList = document.getElementById("cartList");
+            cartList.innerHTML = ""; // Kosongkan daftar keranjang
+
+            cart.forEach((item, index) => {
+                const cartItemHTML = `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${item[1]} - Rp ${item[2].toLocaleString()}
+                    <button class="btn btn-danger btn-sm" onclick="removeFromCart(${index})">Hapus</button>
+                </li>`;
+                cartList.innerHTML += cartItemHTML;
+            });
+        }
+
+        // Hapus item dari keranjang
+        function removeFromCart(index) {
+            cart.splice(index, 1); // Hapus item berdasarkan index
+            updateCartCount(); // Perbarui jumlah item di ikon keranjang
+            renderCart(); // Render ulang daftar keranjang
+        }
+
+        // Pencarian produk berdasarkan keyword
+        document.getElementById("formItem").addEventListener("submit", function (event) {
+            event.preventDefault(); // Hindari reload halaman
+            const keyword = document.getElementById("keyword").value;
+            renderItems(keyword); // Render ulang produk sesuai pencarian
+        });
+
+        // Tampilkan isi keranjang saat modal dibuka
+        $('#cartModal').on('show.bs.modal', renderCart);
+
+        // Inisialisasi: render semua produk
+        renderItems();
+        updateCartCount(); // Perbarui badge keranjang saat pertama kali load
+    </script>
+</body>
+</html>
